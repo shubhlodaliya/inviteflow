@@ -287,3 +287,42 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ error: "Failed to reset password", details: error.message });
   }
 };
+
+// =========================
+// GET USER (from JWT)
+// =========================
+exports.getUser = async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"] || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return res.status(401).json({ error: "Authorization token missing" });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: "JWT secret not configured" });
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const userResult = await pool.query(
+      "SELECT id, name, email FROM users WHERE id = $1",
+      [payload.userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({ user: userResult.rows[0] });
+  } catch (error) {
+    console.error("Error fetching user:", error.message);
+    return res.status(500).json({ error: "Failed to fetch user", details: error.message });
+  }
+};

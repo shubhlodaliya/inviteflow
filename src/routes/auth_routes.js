@@ -7,12 +7,16 @@ const {
   login,
   sendForgotPasswordOtp,
   verifyForgotPasswordOtp,
-  resetPassword
+  resetPassword,
+  getUser
 } = require("../controllers/auth_controller");
 
 router.post("/send-otp", sendOtp);
 router.post("/signup", signup);
 router.post("/login", login);
+
+// Current user
+router.get("/get-user", getUser);
 
 // Forgot Password Routes
 router.post("/forgot-password/send-otp", sendForgotPasswordOtp);
